@@ -18,9 +18,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Add src to path (from api/ folder, src is in ../src)
+# Add src to path (src is now a sibling in backend/src)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(SCRIPT_DIR, "..", "src"))
+sys.path.insert(0, os.path.join(SCRIPT_DIR, "src"))
 
 from face_detector import FaceDetector
 from emotion_model import EmotionClassifier
