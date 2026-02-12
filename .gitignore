@@ -12,8 +12,9 @@ models/*.keras
 !models/.gitkeep
 
 # Audio
-audio/
-!audio/.gitkeep
+/audio/
+!/audio/.gitkeep
+!public/audio/
 
 # Node (if any in root)
 node_modules/
