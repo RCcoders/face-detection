@@ -1,0 +1,406 @@
+@import "tailwindcss";
+
+/* ── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --bg-primary: #0a0a10;
+  --bg-card: rgba(18, 18, 28, 0.75);
+  --bg-glass: rgba(30, 30, 50, 0.45);
+  --text-primary: #f0f0f5;
+  --text-secondary: #8a8a9a;
+  --text-dim: #55556a;
+  --accent-cyan: #5adce8;
+  --accent-amber: #ffb84d;
+  --accent-green: #6ad87a;
+  --accent-red: #e86070;
+  --accent-purple: #b070e8;
+  --happy: #ffc753;
+  --sad: #60a8e8;
+  --stressed: #e87070;
+  --neutral: #5adce8;
+  --radius: 16px;
+  --radius-sm: 8px;
+}
+
+/* ── Base ───────────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Glassmorphism Card ────────────────────────────────────────── */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+}
+
+.glass-strong {
+  background: var(--bg-card);
+  backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+}
+
+/* ── Animations ────────────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+}
+
+@keyframes scan-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes text-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 20px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 40px currentColor, 0 0 60px currentColor;
+  }
+}
+
+@keyframes progress-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px var(--accent-amber);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--accent-amber), 0 0 40px var(--accent-amber);
+  }
+}
+
+@keyframes corner-breathe {
+  0%,
+  100% {
+    width: 28px;
+    height: 28px;
+  }
+  50% {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@keyframes dots {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.5s ease-in-out infinite;
+}
+.animate-scan {
+  animation: scan-sweep 3s linear infinite;
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+.animate-slide-up {
+  animation: slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-text-glow {
+  animation: text-glow 2s ease-in-out infinite;
+}
+
+/* ── Kiosk Layout ──────────────────────────────────────────────── */
+.kiosk-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.camera-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.camera-layer video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.overlay-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(6, 6, 12, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.ui-layer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ui-layer > * {
+  pointer-events: auto;
+}
+
+/* ── Face Border Canvas ────────────────────────────────────────── */
+.face-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+/* ── Scan Ring ─────────────────────────────────────────────────── */
+.scan-ring-outer {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.scan-ring-outer::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(90, 220, 232, 0.2);
+  animation: pulse-ring 2.5s ease-in-out infinite;
+}
+
+.scan-ring-inner {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(90, 220, 232, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scan-sweep 8s linear infinite;
+}
+
+/* ── Progress Bar ──────────────────────────────────────────────── */
+.progress-track {
+  width: 320px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease-out;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 4px;
+  height: 10px;
+  background: inherit;
+  border-radius: 2px;
+  filter: brightness(1.5);
+}
+
+/* ── Emotion Result Card ───────────────────────────────────────── */
+.result-card {
+  padding: 40px 60px;
+  text-align: center;
+  min-width: 380px;
+}
+
+.emotion-emoji {
+  font-size: 64px;
+  margin-bottom: 8px;
+  display: block;
+  animation: float 2.5s ease-in-out infinite;
+}
+
+.emotion-name {
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.confidence-bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin: 12px auto;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+}
+
+/* ── HUD / Footer ─────────────────────────────────────────────── */
+.hud-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  height: 36px;
+  background: rgba(6, 6, 12, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ── Particles ─────────────────────────────────────────────────── */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(90, 220, 232, 0.15);
+  pointer-events: none;
+  animation: float var(--dur) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+/* ── Audio Visualizer ──────────────────────────────────────────── */
+.audio-bar {
+  display: inline-block;
+  width: 3px;
+  margin: 0 1.5px;
+  border-radius: 2px;
+  background: var(--accent-amber);
+  animation: audio-bounce 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes audio-bounce {
+  from {
+    height: 4px;
+  }
+  to {
+    height: var(--h);
+  }
+}
+
+/* ── Utility ───────────────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease infinite;
+}
