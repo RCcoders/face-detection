@@ -36,11 +36,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-print("[INFO] Loading face detector...")
-face_detector = FaceDetector()
+print("[INFO] Server starting...")
+face_detector = None
+emotion_classifier = None
 
-print("[INFO] Loading emotion model...")
-emotion_classifier = EmotionClassifier()
+@app.on_event("startup")
+async def startup_event():
+    global face_detector, emotion_classifier
+    print("[INFO] Loading face detector...")
+    face_detector = FaceDetector()
+    print("[INFO] Loading emotion model...")
+    emotion_classifier = EmotionClassifier()
 
 
 # ── Models ────────────────────────────────────────────────────────────────────

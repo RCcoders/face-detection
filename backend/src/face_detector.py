@@ -19,7 +19,12 @@ class FaceDetector:
         Args:
             min_detection_confidence: Minimum confidence for face detection [0.0, 1.0].
         """
-        self.mp_face_detection = mp.solutions.face_detection
+        try:
+            self.mp_face_detection = mp.solutions.face_detection
+        except AttributeError:
+            from mediapipe.python.solutions import face_detection
+            self.mp_face_detection = face_detection
+
         self.detector = self.mp_face_detection.FaceDetection(
             min_detection_confidence=min_detection_confidence,
             model_selection=0
