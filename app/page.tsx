@@ -292,9 +292,8 @@ export default function KioskPage() {
         {state === "IDLE" && (
           <div className="animate-fade-in" style={{ textAlign: "center" }}>
             <h1
-              className="text-gradient"
+              className="text-gradient text-4xl md:text-5xl lg:text-6xl"
               style={{
-                fontSize: 48,
                 fontWeight: 800,
                 letterSpacing: -1,
                 marginBottom: 8,
@@ -517,8 +516,8 @@ export default function KioskPage() {
         {state === "RESET" && (
           <div className="animate-fade-in" style={{ textAlign: "center" }}>
             <p
+              className="text-3xl md:text-5xl"
               style={{
-                fontSize: 42,
                 fontWeight: 700,
                 color: "var(--accent-green)",
                 marginBottom: 16,

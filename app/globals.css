@@ -263,14 +263,21 @@ body {
 
 /* ── Scan Ring ─────────────────────────────────────────────────── */
 .scan-ring-outer {
-  width: 140px;
-  height: 140px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   border: 2px solid var(--accent-cyan);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+@media (min-width: 768px) {
+  .scan-ring-outer {
+    width: 140px;
+    height: 140px;
+  }
 }
 
 .scan-ring-outer::before {
@@ -283,8 +290,8 @@ body {
 }
 
 .scan-ring-inner {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: 1.5px dashed rgba(90, 220, 232, 0.4);
   display: flex;
@@ -293,14 +300,27 @@ body {
   animation: scan-sweep 8s linear infinite;
 }
 
+@media (min-width: 768px) {
+  .scan-ring-inner {
+    width: 80px;
+    height: 80px;
+  }
+}
+
 /* ── Progress Bar ──────────────────────────────────────────────── */
 .progress-track {
-  width: 320px;
+  width: 240px;
   height: 6px;
   background: rgba(255, 255, 255, 0.06);
   border-radius: 3px;
   overflow: hidden;
   position: relative;
+}
+
+@media (min-width: 768px) {
+  .progress-track {
+    width: 320px;
+  }
 }
 
 .progress-fill {
@@ -324,9 +344,19 @@ body {
 
 /* ── Emotion Result Card ───────────────────────────────────────── */
 .result-card {
-  padding: 40px 60px;
+  padding: 24px 30px;
   text-align: center;
-  min-width: 380px;
+  min-width: auto;
+  width: 90vw;
+  max-width: 400px;
+}
+
+@media (min-width: 768px) {
+  .result-card {
+    padding: 40px 60px;
+    min-width: 380px;
+    width: auto;
+  }
 }
 
 .emotion-emoji {
