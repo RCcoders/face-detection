@@ -1,5 +1,7 @@
 FROM python:3.10-slim
 
+
+# Updated pip configurations for Render
 WORKDIR /app
 
 # Copy requirements, install dependencies
