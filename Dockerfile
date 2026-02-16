@@ -3,8 +3,10 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Copy requirements, install dependencies
+# Copy requirements, install dependencies
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
 
 # Copy application code
 COPY . .
