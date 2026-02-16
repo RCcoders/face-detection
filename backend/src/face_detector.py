@@ -1,43 +1,29 @@
 """
-face_detector.py — OpenCV-based single-face detector.
+face_detector.py — MediaPipe-based single-face detector.
 
-Uses OpenCV's Haar Cascade classifier for reliable face detection.
-Detects exactly one face in the frame.
-Returns the bounding box and cropped face region.
-Rejects frames with zero or multiple faces.
+Uses MediaPipe Face Detection for robust, high-performance face tracking.
+Detects faces even in difficult lighting and poses.
 """
 
 import cv2
 import numpy as np
-
+import mediapipe as mp
 
 class FaceDetector:
-    """Detects a single face using OpenCV Haar Cascade."""
+    """Detects a single face using MediaPipe Face Detection."""
 
-    def __init__(self, min_detection_confidence: float = 0.6, scale_factor: float = 1.15,
-                 min_neighbors: int = 6, min_face_size: int = 80):
+    def __init__(self, min_detection_confidence: float = 0.5):
         """
-        Initialize the face detector.
-
+        Initialize the MediaPipe face detector.
+        
         Args:
-            min_detection_confidence: Not used directly (kept for API compat).
-            scale_factor: How much the image size is reduced at each scale.
-            min_neighbors: How many neighbors each candidate rectangle needs
-                           to retain it (higher = fewer false positives).
-            min_face_size: Minimum face size in pixels.
+            min_detection_confidence: Minimum confidence for face detection [0.0, 1.0].
         """
-        cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-        self.face_cascade = cv2.CascadeClassifier(cascade_path)
-
-        if self.face_cascade.empty():
-            raise RuntimeError(
-                f"Failed to load Haar cascade from {cascade_path}. "
-                "Make sure opencv-python is installed correctly."
-            )
-
-        self.scale_factor = scale_factor
-        self.min_neighbors = min_neighbors
-        self.min_face_size = (min_face_size, min_face_size)
+        self.mp_face_detection = mp.solutions.face_detection
+        self.detector = self.mp_face_detection.FaceDetection(
+            min_detection_confidence=min_detection_confidence,
+            model_selection=0
+        )
 
     def detect(self, frame):
         """
@@ -51,41 +37,52 @@ class FaceDetector:
             bbox = (x, y, w, h) in pixel coordinates.
             face_crop = cropped face region (BGR numpy array).
             num_faces = number of faces detected.
-            Returns (None, None, 0) if no faces detected.
-            Returns (None, None, N) if N > 1 faces detected.
         """
         h, w = frame.shape[:2]
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        
+        # specific for mediapipe: RGB
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.detector.process(rgb_frame)
 
-        # Equalize histogram for better detection in varying lighting
-        gray = cv2.equalizeHist(gray)
-
-        faces = self.face_cascade.detectMultiScale(
-            gray,
-            scaleFactor=self.scale_factor,
-            minNeighbors=self.min_neighbors,
-            minSize=self.min_face_size,
-            flags=cv2.CASCADE_SCALE_IMAGE,
-        )
-
-        num_faces = len(faces)
-
-        if num_faces == 0:
+        if not results.detections:
             return None, None, 0
 
-        if num_faces > 1:
-            return None, None, num_faces
+        # Find the largest face
+        detections = results.detections
+        num_faces = len(detections)
+        
+        best_detection = None
+        best_area = 0.0
+        
+        for detection in detections:
+            bboxC = detection.location_data.relative_bounding_box
+            width = bboxC.width
+            height = bboxC.height
+            area = width * height
+            if area > best_area:
+                best_area = area
+                best_detection = detection
+        
+        if best_detection is None:
+            return None, None, 0
 
-        # Exactly one face
-        x, y, fw, fh = faces[0]
+        # Convert relative bbox to pixels
+        bboxC = best_detection.location_data.relative_bounding_box
+        x = int(bboxC.xmin * w)
+        y = int(bboxC.ymin * h)
+        fw = int(bboxC.width * w)
+        fh = int(bboxC.height * h)
 
-        # Add padding for better emotion recognition
-        pad_x = int(fw * 0.15)
-        pad_y = int(fh * 0.15)
+        # Enhance bbox (MediaPipe is very tight)
+        # We need more forehead/chin for emotion model
+        pad_y_top = int(fh * 0.20)
+        pad_y_bottom = int(fh * 0.05)
+        pad_x = int(fw * 0.05)
+
         x1 = max(0, x - pad_x)
-        y1 = max(0, y - pad_y)
+        y1 = max(0, y - pad_y_top)
         x2 = min(w, x + fw + pad_x)
-        y2 = min(h, y + fh + pad_y)
+        y2 = min(h, y + fh + pad_y_bottom)
 
         face_crop = frame[y1:y2, x1:x2]
 
@@ -93,11 +90,12 @@ class FaceDetector:
             return None, None, 0
 
         bbox = (x1, y1, x2 - x1, y2 - y1)
-        return bbox, face_crop, 1
+        return bbox, face_crop, num_faces
 
     def release(self):
-        """Release resources (no-op for Haar cascade, kept for API compat)."""
-        pass
+        """Release MediaPipe resources."""
+        if hasattr(self, 'detector'):
+            self.detector.close()
 
     def __del__(self):
-        pass
+        self.release()

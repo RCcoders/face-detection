@@ -5,7 +5,10 @@ import Camera from "@/components/Camera";
 import EmotionDisplay from "@/components/EmotionDisplay";
 import ScanOverlay from "@/components/ScanOverlay";
 import ParticleField from "@/components/ParticleField";
+import EmotionThemeProvider from "@/components/EmotionThemeProvider";
 import AudioPlayer from "@/components/AudioPlayer";
+import EmotionCard from "@/components/EmotionCard";
+import ChallengeMode from "@/components/ChallengeMode";
 import FaceBoundary, { isFaceInBoundary } from "@/components/FaceBoundary";
 import { detectEmotion, type DetectResult } from "@/lib/api";
 
@@ -19,6 +22,7 @@ const DETECT_DELAY = 800;      // 0.8s before scanning starts
 
 export default function KioskPage() {
   /* ── State ──────────────────────────────────────────────────── */
+  const [mode, setMode] = useState<"normal" | "challenge">("normal");
   const [state, setState] = useState<KioskState>("IDLE");
   const [emotion, setEmotion] = useState<string | null>(null);
   const [confidence, setConfidence] = useState(0);
@@ -27,7 +31,9 @@ export default function KioskPage() {
   const [playAudio, setPlayAudio] = useState(false);
   const [faceCount, setFaceCount] = useState(0);
   const [faceInZone, setFaceInZone] = useState(false);
+  const [snapshot, setSnapshot] = useState<string | null>(null);
   const frameDimsRef = useRef({ w: 640, h: 480 });
+  const lastFrameRef = useRef<string | null>(null);
 
   /* ── Refs ────────────────────────────────────────────────────── */
   const stateRef = useRef(state);
@@ -64,6 +70,7 @@ export default function KioskPage() {
     setAudioProgress(0);
     setPlayAudio(false);
     setFaceCount(0);
+    setSnapshot(null);
     emotionVotesRef.current = [];
     goTo("IDLE");
   }, [clearTimer, goTo]);
@@ -104,6 +111,10 @@ export default function KioskPage() {
     };
   }, []);
 
+  /* ── Smoothing Buffer ───────────────────────────────────────── */
+  const historyRef = useRef<{ emotion: string; confidence: number }[]>([]);
+  const SMOOTHING_WINDOW = 6; // Number of frames to average
+
   /* ── Handle each frame result from the API ──────────────────── */
   const handleDetection = useCallback(
     (result: DetectResult) => {
@@ -123,6 +134,7 @@ export default function KioskPage() {
       if (s === "IDLE") {
         if (detected) {
           detectTimeRef.current = Date.now();
+          historyRef.current = []; // Clear history on new detection
           goTo("DETECTING");
         }
         return;
@@ -155,6 +167,32 @@ export default function KioskPage() {
             emotion: result.emotion,
             confidence: result.confidence,
           });
+
+          // --- SMOOTHING LOGIC ---
+          // Add to rolling history
+          historyRef.current.push({ emotion: result.emotion, confidence: result.confidence });
+          if (historyRef.current.length > SMOOTHING_WINDOW) {
+            historyRef.current.shift();
+          }
+
+          // Calculate smoothed result for display
+          const totals: Record<string, number> = {};
+          for (const item of historyRef.current) {
+            totals[item.emotion] = (totals[item.emotion] || 0) + item.confidence;
+          }
+
+          let bestEm = result.emotion;
+          let bestScore = -1;
+
+          for (const [em, score] of Object.entries(totals)) {
+            if (score > bestScore) {
+              bestScore = score;
+              bestEm = em;
+            }
+          }
+
+          setEmotion(bestEm);
+          // -----------------------
         }
 
         // Update progress
@@ -169,6 +207,10 @@ export default function KioskPage() {
             setEmotion(winner.emotion);
             setConfidence(winner.confidence);
             setPlayAudio(true);
+            // Capture snapshot for the emotion card
+            if (lastFrameRef.current) {
+              setSnapshot(lastFrameRef.current);
+            }
             goTo("RESULT");
             // Auto-transition to RESET
             timerRef.current = setTimeout(() => {
@@ -193,6 +235,7 @@ export default function KioskPage() {
       if (s === "RESULT" || s === "RESET") return;
 
       frameDimsRef.current = { w: frameW, h: frameH };
+      lastFrameRef.current = base64;
 
       try {
         const result = await detectEmotion(base64);
@@ -219,6 +262,10 @@ export default function KioskPage() {
   }, []);
 
   /* ── Render ─────────────────────────────────────────────────── */
+  if (mode === "challenge") {
+    return <ChallengeMode onExit={() => setMode("normal")} />;
+  }
+
   return (
     <div className="kiosk-container">
       {/* Camera feed */}
@@ -230,11 +277,14 @@ export default function KioskPage() {
         />
       </div>
 
+      {/* Emotion-reactive environment */}
+      <EmotionThemeProvider emotion={emotion} state={state} />
+
       {/* Face boundary zone */}
       <FaceBoundary state={state} />
 
-      {/* Particles (idle only) */}
-      {state === "IDLE" && <ParticleField />}
+      {/* Particles (always visible, emotion-reactive) */}
+      <ParticleField emotion={emotion} />
 
       {/* UI Layer */}
       <div className="ui-layer">
@@ -314,14 +364,14 @@ export default function KioskPage() {
               <p
                 style={{
                   fontSize: 14,
-                  color: "var(--accent-amber)",
+                  color: "var(--accent-cyan)",
                   marginTop: 16,
                 }}
               >
-                ⚠ Only one person at a time, please
+                👥 Multiple faces detected — step closer for best results
               </p>
             )}
-            {faceCount === 1 && !faceInZone && (
+            {faceCount >= 1 && !faceInZone && (
               <p
                 style={{
                   fontSize: 14,
@@ -332,6 +382,28 @@ export default function KioskPage() {
                 ↕ Move your face into the oval zone
               </p>
             )}
+
+            {/* Challenge Mode button */}
+            <button
+              onClick={() => setMode("challenge")}
+              style={{
+                marginTop: 32,
+                padding: "10px 24px",
+                borderRadius: 10,
+                border: "1px solid rgba(176,112,232,0.3)",
+                background: "rgba(176,112,232,0.1)",
+                color: "var(--accent-purple)",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                margin: "32px auto 0",
+              }}
+            >
+              🎭 Challenge Mode
+            </button>
           </div>
         )}
 
@@ -388,36 +460,56 @@ export default function KioskPage() {
 
         {/* ── RESULT ── */}
         {state === "RESULT" && emotion && (
-          <div style={{ textAlign: "center" }}>
-            <div className="result-card glass-strong animate-slide-up">
-              <EmotionDisplay
-                emotion={emotion}
-                confidence={confidence}
-                visible
-              />
+          <div
+            style={{
+              display: "flex",
+              gap: 32,
+              alignItems: "flex-start",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              maxWidth: "90vw",
+            }}
+          >
+            {/* Left: Emotion result + audio */}
+            <div style={{ textAlign: "center" }}>
+              <div className="result-card glass-strong animate-slide-up">
+                <EmotionDisplay
+                  emotion={emotion}
+                  confidence={confidence}
+                  visible
+                />
 
-              {/* Audio progress */}
-              <div style={{ marginTop: 30 }}>
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--accent-amber)",
-                    marginBottom: 8,
-                  }}
-                >
-                  ♪ Playing audio feedback
-                </p>
-                <div className="progress-track" style={{ width: 240, margin: "0 auto" }}>
-                  <div
-                    className="progress-fill"
+                {/* Audio progress */}
+                <div style={{ marginTop: 30 }}>
+                  <p
                     style={{
-                      width: `${audioProgress * 100}%`,
-                      background: "var(--accent-amber)",
+                      fontSize: 13,
+                      color: "var(--accent-amber)",
+                      marginBottom: 8,
                     }}
-                  />
+                  >
+                    ♪ Playing audio feedback
+                  </p>
+                  <div className="progress-track" style={{ width: 240, margin: "0 auto" }}>
+                    <div
+                      className="progress-fill"
+                      style={{
+                        width: `${audioProgress * 100}%`,
+                        background: "var(--accent-amber)",
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Right: Shareable card */}
+            <EmotionCard
+              snapshot={snapshot}
+              emotion={emotion}
+              confidence={confidence}
+              visible
+            />
           </div>
         )}
 

@@ -170,6 +170,18 @@ body {
   }
 }
 
+@keyframes ambient-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: var(--orb-opacity, 0.15);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: calc(var(--orb-opacity, 0.15) * 1.4);
+  }
+}
+
 .animate-pulse-ring {
   animation: pulse-ring 2.5s ease-in-out infinite;
 }

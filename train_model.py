@@ -43,8 +43,8 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from create_model import build_emotion_model
 
 
-# Emotion labels must match model output order
-EMOTION_LABELS = ["happy", "neutral", "sad", "stressed"]
+# Emotion labels must match model output order (sorted alphabetically by default in flow_from_directory)
+EMOTION_LABELS = ["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"]
 
 
 def create_data_generators(data_dir, batch_size=64, img_size=48):
@@ -67,11 +67,19 @@ def create_data_generators(data_dir, batch_size=64, img_size=48):
     test_dir = os.path.join(data_dir, "test")
 
     if not os.path.exists(train_dir):
-        raise FileNotFoundError(
-            f"Training directory not found: {train_dir}\n"
-            "Please download and organize the FER-2013 dataset.\n"
-            "See the script docstring for expected directory structure."
-        )
+        # Try looking in public/dataset if default fails
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        public_dataset = os.path.join(script_dir, "public", "dataset", "train")
+        if os.path.exists(public_dataset):
+            train_dir = public_dataset
+            test_dir = os.path.join(script_dir, "public", "dataset", "test")
+            print(f"[INFO] Found dataset at: {train_dir}")
+        else:
+             raise FileNotFoundError(
+                f"Training directory not found: {train_dir}\n"
+                "Please download and organize the FER-2013 dataset.\n"
+                "See the script docstring for expected directory structure."
+            )
 
     train_generator = train_datagen.flow_from_directory(
         train_dir,

@@ -20,7 +20,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
-def build_emotion_model(num_classes=4, input_shape=(48, 48, 1)):
+def build_emotion_model(num_classes=7, input_shape=(48, 48, 1)):
     """
     Build a lightweight CNN for facial emotion classification.
 
@@ -110,7 +110,7 @@ def main():
     print(f"  Input:   48x48 grayscale")
     print()
 
-    model = build_emotion_model(num_classes=4)
+    model = build_emotion_model(num_classes=7)
     model.summary()
 
     print(f"\nSaving model to: {model_path}")

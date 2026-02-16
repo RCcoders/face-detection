@@ -72,6 +72,13 @@ async def detect_emotion(req: DetectRequest):
         arr = np.frombuffer(raw, dtype=np.uint8)
         frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
+        if frame is not None:
+            h, w = frame.shape[:2]
+            if w > 640:
+                scale = 640 / w
+                new_h = int(h * scale)
+                frame = cv2.resize(frame, (640, new_h))
+
         if frame is None:
             return DetectResponse(detected=False, face_count=0)
 
@@ -107,6 +114,55 @@ async def detect_emotion(req: DetectRequest):
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+# ── Leaderboard Persistence ───────────────────────────────────────────────────
+
+import json
+from datetime import datetime
+
+LEADERBOARD_FILE = os.path.join(SCRIPT_DIR, "..", "leaderboard.json")
+
+def load_leaderboard():
+    if not os.path.exists(LEADERBOARD_FILE):
+        return []
+    try:
+        with open(LEADERBOARD_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def save_leaderboard(entries):
+    try:
+        # Keep top 50 only
+        entries.sort(key=lambda x: x["score"], reverse=True)
+        entries = entries[:50]
+        with open(LEADERBOARD_FILE, "w") as f:
+            json.dump(entries, f, indent=2)
+    except Exception as e:
+        print(f"[ERROR] Failed to save leaderboard: {e}")
+
+class LeaderboardEntry(BaseModel):
+    name: str
+    score: int
+    rounds: int
+    date: str | None = None
+
+@app.get("/api/leaderboard")
+async def get_leaderboard():
+    return load_leaderboard()
+
+@app.post("/api/leaderboard")
+async def add_leaderboard_entry(entry: LeaderboardEntry):
+    board = load_leaderboard()
+    
+    new_entry = entry.dict()
+    if not new_entry.get("date"):
+        new_entry["date"] = datetime.now().isoformat()
+        
+    board.append(new_entry)
+    save_leaderboard(board)
+    return {"status": "ok", "leaderboard": board[:10]} # Return top 10 for immediate updates
 
 
 # ── Run ───────────────────────────────────────────────────────────────────────
