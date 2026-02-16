@@ -14,8 +14,16 @@ export default function FaceBoundary({ state }: FaceBoundaryProps) {
     const showGuide = state === "IDLE" || state === "DETECTING";
     const isActive = state === "DETECTING" || state === "SCANNING";
 
+    // Responsive logic (simple media query check via state or just CSS classes would be ideal, 
+    // but here we render SVG attributes. We'll use a simple hook or check window).
+    // Better: use CSS variables for rx/ry if possible? SVG explicit attributes don't always like CSS vars for geometry.
+    // simpler: Let's use a wide default, but if the user wants it "removed on mobile", we can just hide it with CSS media query.
+    // BUT the logic needs to match.
+    // Let's implement a dynamic check.
+
     return (
         <div
+            className="face-boundary-container"
             style={{
                 position: "absolute",
                 inset: 0,
@@ -30,13 +38,11 @@ export default function FaceBoundary({ state }: FaceBoundaryProps) {
             <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
                 <defs>
                     <mask id="boundary-mask">
-                        {/* White = visible (darkened) */}
                         <rect width="100%" height="100%" fill="white" />
-                        {/* Black = cutout (clear) */}
-                        <ellipse cx="50%" cy="45%" rx="18%" ry="30%" fill="black" />
+                        {/* Desktop: 18% w, 30% h. Mobile (Portrait): 35% w, 22% h */}
+                        <ellipse className="boundary-ellipse" cx="50%" cy="45%" rx="18%" ry="30%" fill="black" />
                     </mask>
                 </defs>
-                {/* Dark overlay with oval cutout */}
                 <rect
                     width="100%"
                     height="100%"
@@ -52,8 +58,8 @@ export default function FaceBoundary({ state }: FaceBoundaryProps) {
                     height="100%"
                     style={{ position: "absolute", inset: 0 }}
                 >
-                    {/* Outer glow */}
                     <ellipse
+                        className="boundary-ellipse"
                         cx="50%"
                         cy="45%"
                         rx="18.5%"
@@ -62,8 +68,8 @@ export default function FaceBoundary({ state }: FaceBoundaryProps) {
                         stroke={isActive ? "rgba(106,216,122,0.15)" : "rgba(90,220,232,0.1)"}
                         strokeWidth="8"
                     />
-                    {/* Main border */}
                     <ellipse
+                        className="boundary-ellipse"
                         cx="50%"
                         cy="45%"
                         rx="18%"
@@ -98,20 +104,21 @@ export default function FaceBoundary({ state }: FaceBoundaryProps) {
                     Position face here
                 </div>
             )}
+
+            <style jsx global>{`
+                @media (max-width: 768px) {
+                    .boundary-ellipse {
+                        rx: 35% !important;
+                        ry: 25% !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
 
 /**
  * Check if a face bounding box is inside the boundary zone.
- *
- * The boundary is an oval at center (50%, 45%) with rx=18%, ry=30%
- * of the frame dimensions. We check if the center of the bbox
- * falls within this ellipse.
- *
- * @param bbox [x, y, w, h] face bounding box in pixels
- * @param frameW  frame width in pixels
- * @param frameH  frame height in pixels
  */
 export function isFaceInBoundary(
     bbox: number[],
@@ -130,12 +137,17 @@ export function isFaceInBoundary(
     // Boundary ellipse center and radii (normalized)
     const cx = 0.50;
     const cy = 0.45;
-    const rx = 0.18;
-    const ry = 0.30;
+
+    // Adjust logic based on aspect ratio to match visual CSS
+    const isPortrait = frameH > frameW;
+
+    const rx = isPortrait ? 0.35 : 0.18;
+    const ry = isPortrait ? 0.25 : 0.30;
 
     // Ellipse equation: ((x-cx)/rx)^2 + ((y-cy)/ry)^2 <= 1
     const dx = (faceCenterX - cx) / rx;
     const dy = (faceCenterY - cy) / ry;
 
-    return dx * dx + dy * dy <= 1.0;
+    // Loosen the check slightly (1.2 instead of 1.0) to be more forgiving on mobile
+    return dx * dx + dy * dy <= 1.2;
 }
