@@ -284,12 +284,11 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
             <div className="ui-layer">
                 {/* ── READY ── */}
                 {gameState === "READY" && !showLeaderboard && (
-                    <div className="animate-fade-in" style={{ textAlign: "center" }}>
+                    <div className="animate-fade-in" style={{ textAlign: "center", width: "100%", padding: "0 20px" }}>
                         <p style={{ fontSize: 48, marginBottom: 8 }}>🎭</p>
                         <h1
-                            className="text-gradient"
+                            className="text-gradient text-3xl md:text-5xl"
                             style={{
-                                fontSize: 42,
                                 fontWeight: 800,
                                 letterSpacing: -1,
                                 marginBottom: 8,
@@ -310,6 +309,7 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
                         <div
                             style={{
                                 display: "flex",
+                                flexWrap: "wrap",
                                 gap: 12,
                                 justifyContent: "center",
                                 marginBottom: 16,
@@ -324,9 +324,11 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
                                         background: "rgba(255,255,255,0.04)",
                                         border: "1px solid rgba(255,255,255,0.06)",
                                         textAlign: "center",
+                                        flex: "1 1 40%",
+                                        maxWidth: "150px"
                                     }}
                                 >
-                                    <span style={{ fontSize: 28 }}>{c.emoji}</span>
+                                    <span style={{ fontSize: 24 }}>{c.emoji}</span>
                                     <p
                                         style={{
                                             fontSize: 11,
@@ -364,64 +366,67 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
                                     color: "white",
                                     fontSize: 16,
                                     textAlign: "center",
-                                    width: 240,
+                                    width: "100%",
+                                    maxWidth: 300,
                                     outline: "none",
                                 }}
                             />
                         </div>
 
-                        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-                            <button
-                                onClick={startGame}
-                                className="challenge-btn-primary"
-                                style={{
-                                    padding: "14px 40px",
-                                    borderRadius: 12,
-                                    border: "1px solid var(--accent-green)",
-                                    background: "rgba(106,216,122,0.15)",
-                                    color: "var(--accent-green)",
-                                    fontSize: 16,
-                                    fontWeight: 700,
-                                    cursor: "pointer",
-                                    pointerEvents: "auto",
-                                    transition: "all 0.3s",
-                                }}
-                            >
-                                ▶ Start Game
-                            </button>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+                            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+                                <button
+                                    onClick={startGame}
+                                    className="challenge-btn-primary"
+                                    style={{
+                                        padding: "14px 40px",
+                                        borderRadius: 12,
+                                        border: "1px solid var(--accent-green)",
+                                        background: "rgba(106,216,122,0.15)",
+                                        color: "var(--accent-green)",
+                                        fontSize: 16,
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                        pointerEvents: "auto",
+                                        transition: "all 0.3s",
+                                    }}
+                                >
+                                    ▶ Start Game
+                                </button>
 
-                            <button
-                                onClick={() => setShowLeaderboard(true)}
-                                style={{
-                                    padding: "14px 24px",
-                                    borderRadius: 12,
-                                    border: "1px solid rgba(255,184,77,0.3)",
-                                    background: "rgba(255,184,77,0.08)",
-                                    color: "var(--accent-amber)",
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    cursor: "pointer",
-                                    pointerEvents: "auto",
-                                }}
-                            >
-                                🏆 Leaderboard
-                            </button>
+                                <button
+                                    onClick={() => setShowLeaderboard(true)}
+                                    style={{
+                                        padding: "14px 24px",
+                                        borderRadius: 12,
+                                        border: "1px solid rgba(255,184,77,0.3)",
+                                        background: "rgba(255,184,77,0.08)",
+                                        color: "var(--accent-amber)",
+                                        fontSize: 14,
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                        pointerEvents: "auto",
+                                    }}
+                                >
+                                    🏆 Leaderboard
+                                </button>
 
-                            <button
-                                onClick={onExit}
-                                style={{
-                                    padding: "14px 24px",
-                                    borderRadius: 12,
-                                    border: "1px solid rgba(255,255,255,0.08)",
-                                    background: "rgba(255,255,255,0.04)",
-                                    color: "var(--text-secondary)",
-                                    fontSize: 14,
-                                    cursor: "pointer",
-                                    pointerEvents: "auto",
-                                }}
-                            >
-                                ← Back
-                            </button>
+                                <button
+                                    onClick={onExit}
+                                    style={{
+                                        padding: "14px 24px",
+                                        borderRadius: 12,
+                                        border: "1px solid rgba(255,255,255,0.08)",
+                                        background: "rgba(255,255,255,0.04)",
+                                        color: "var(--text-secondary)",
+                                        fontSize: 14,
+                                        cursor: "pointer",
+                                        pointerEvents: "auto",
+                                    }}
+                                >
+                                    ← Back
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -449,9 +454,8 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
                             Get Ready
                         </p>
                         <p
-                            className="countdown-number"
+                            className="countdown-number text-7xl md:text-9xl"
                             style={{
-                                fontSize: 120,
                                 fontWeight: 800,
                                 color: "var(--accent-cyan)",
                                 lineHeight: 1,
@@ -679,8 +683,8 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
                         </h2>
 
                         <p
+                            className="text-6xl md:text-8xl"
                             style={{
-                                fontSize: 64,
                                 fontWeight: 800,
                                 color: "var(--text-primary)",
                                 lineHeight: 1.1,
@@ -698,6 +702,7 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
                             style={{
                                 display: "flex",
                                 gap: 8,
+                                flexWrap: "wrap",
                                 justifyContent: "center",
                                 marginBottom: 28,
                             }}
@@ -736,7 +741,7 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
                             ))}
                         </div>
 
-                        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
                             <button
                                 onClick={startGame}
                                 style={{
@@ -793,8 +798,11 @@ export default function ChallengeMode({ onExit }: { onExit: () => void }) {
             <div className="hud-bar">
                 <span>ESC Exit</span>
                 <span>Challenge Mode</span>
-                <span>
+                <span className="hidden md:inline">
                     Score: {totalScore} | Round {Math.min(round + 1, TOTAL_ROUNDS)}/{TOTAL_ROUNDS}
+                </span>
+                <span className="md:hidden">
+                    {totalScore} pts | {Math.min(round + 1, TOTAL_ROUNDS)}/{TOTAL_ROUNDS}
                 </span>
             </div>
         </div>
