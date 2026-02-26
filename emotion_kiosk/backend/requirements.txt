@@ -2,8 +2,7 @@ fastapi==0.109.0
 uvicorn==0.27.0
 python-multipart==0.0.9
 opencv-python-headless==4.9.0.80
-mediapipe==0.10.9
+mediapipe==0.10.18
 numpy<2.0.0
-tensorflow-cpu==2.15.0
-ml-dtypes==0.2.0
-
+tensorflow-cpu==2.16.2
+ml-dtypes==0.3.2
